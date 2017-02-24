@@ -1,10 +1,14 @@
 
+ &diag_manager_nml
+ /
+
  &data_override_nml
          /
 
  &fms_io_nml
          fms_netcdf_restart=.true.
-         threading_read='multi' /
+         threading_read='multi'
+ /
 
  &fms_nml
        clock_grain='MODULE'
@@ -26,7 +30,7 @@
     use_slow_find=.true.,
     add_weight_to_ocean=.true.,
     passive_mode=.false.,
-    generate_test_icebergs=.false.,
+    generate_test_icebergs=.true.,
     speed_limit=0.,
     use_roundoff_fix=.true.,
     make_calving_reproduce=.true.,
