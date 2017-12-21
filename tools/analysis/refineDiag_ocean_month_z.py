@@ -163,6 +163,9 @@ def main(args):
     if all(x in f_in.variables.keys() for x in ['umo', 'vmo']):
       varname = 'wmo'
       wmo = calc_w_from_convergence(f_in.variables['umo'], f_in.variables['vmo'])
+      # include wo if wmo is being calculated (for Andrew W.) assuming area info contained in "basinfile"
+      area_rho = f_basin.variables['area'][:]*1035.
+      wo = wmo.copy() / area_rho
       wmo[wmo.mask] = nc_misval
       wmo = np.ma.array(wmo,fill_value=nc_misval)
       wmo.long_name = 'Upward mass transport from resolved and parameterized advective transport'
@@ -171,7 +174,16 @@ def main(args):
       wmo.time_avg_info = 'average_T1,average_T2,average_DT'
       wmo.standard_name = 'upward_ocean_mass_transport'
       wmo.cell_measures = 'area:areacello'
+      wo[wo.mask] = nc_misval
+      wo = np.ma.array(wo,fill_value=nc_misval)
+      wo.long_name = 'Upward Velocity from resolved and parameterized advective transport'
+      wo.units = 'm s-1'
+      wo.cell_methods = 'z_i:point xh:sum yh:sum time:mean'
+      wo.time_avg_info = 'average_T1,average_T2,average_DT'
+      wo.standard_name = 'upward_ocean_velocity'
+      wo.cell_measures = 'area:areacello'
       do_wmo = True
+      do_wo = True
     else:
       do_wmo = False
 
@@ -271,6 +283,13 @@ def main(args):
         for k in wmo.__dict__.keys():
           if k[0] != '_': wmo_out.setncattr(k,wmo.__dict__[k])
 
+      if do_wo:
+        wo_out = f_out.createVariable('wo', np.float32, ('time', 'z_i', 'yh', 'xh'), fill_value=nc_misval)
+        wo_out.missing_value = nc_misval
+        for k in wmo.__dict__.keys():
+          if k[0] != '_': wo_out.setncattr(k,wo.__dict__[k])
+
+
       if do_mfo:
         mfo_out = f_out.createVariable('mfo', np.float32, ('time', 'strait'), fill_value=nc_misval)
         mfo_out.missing_value = nc_misval
@@ -310,6 +329,7 @@ def main(args):
       if do_msftyzsmpa: msftyzsmpa_out[:] = np.ma.array(msftyzsmpa[:])
       if do_msftyzmpa:  msftyzmpa_out[:] = np.ma.array(msftyzmpa[:])
       if do_wmo:        wmo_out[:] = np.ma.array(wmo[:])
+      if do_wo:         wo_out[:] = np.ma.array(wo[:])
       if do_mfo:        mfo_out[:] = np.array(mfo[:])
 
       average_T1_out[:] = average_T1[:]
